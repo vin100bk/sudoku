@@ -7,7 +7,9 @@ var Sudoku = (function ($) {
     /**
      * Configuration information
      */
-    var config = {};
+    var config = {
+        'id': 'sudoku'
+    };
 
     /**
      * Contains sudoku values
@@ -28,6 +30,7 @@ var Sudoku = (function ($) {
     /**
      * Get sudoku HTML
      * @returns {*|jQuery|HTMLElement}
+     * @private
      */
     var _getSudokuHtml = function () {
         var content = '';
@@ -39,7 +42,7 @@ var Sudoku = (function ($) {
             content += '</tr>';
         }
 
-        return $('<table>' + content + '</table>');
+        return $('<table id="' + config.id + '">' + content + '</table>');
     };
 
     /**
@@ -53,7 +56,7 @@ var Sudoku = (function ($) {
         var tmpSubset = {};
         for (var i = 0; i < subset.length; i++) {
             // Is it a digit ?
-            if (!subset[i].toString().match(/^[0-9]$/)) {
+            if (!subset[i].toString().match(/^[1-9]$/)) {
                 return false;
             }
 
@@ -69,6 +72,22 @@ var Sudoku = (function ($) {
         return true;
     };
 
+    /**
+     * Initialize listerners on the table
+     * @private
+     */
+    var _initListeners = function() {
+        $('#' + config.id + ' input').on('keydown', function(e) {
+            // Accept only 1-9 (1 character) and deletion keys
+            if((e.which == 8 || e.which == 46) || (e.which >= 49 && e.which <= 57 && $(this).val().length == 0)) {
+                $('#' + config.id).trigger('change');
+                return true;
+            } else {
+                return false;
+            }
+        });
+    };
+
     /*******
      * Public methods
      *******/
@@ -82,7 +101,11 @@ var Sudoku = (function ($) {
             throw 'The wrapper does not exist';
         }
 
+        // Insert the table in the wrapper
         wrapper.html(_getSudokuHtml());
+
+        // Init listeners
+        _initListeners();
     };
 
     /**
