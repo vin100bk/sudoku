@@ -3,39 +3,8 @@ body, td {
     font-family: Arial;
 }
 
-.sudoku {
-    border-collapse: collapse;
-    width: 100%;
-    height: 80vh;
-
-}
-
-.sudoku input {
-    border: 0;
-    width: 100%;
-    height: 100%;
+footer {
+    height:20vh;
     text-align: center;
-    vertical-align: middle;
-    font-size: 2rem;
-}
-
-/* Delimitate squares */
-.sudoku td {
-    border: 1px solid #eee;
-}
-
-.sudoku tr:first-child td {
-    border-top: 2px solid #ccc;
-}
-
-.sudoku td:first-child {
-    border-left: 2px solid #ccc;
-}
-
-.sudoku tr:nth-child(3n) td {
-    border-bottom: 2px solid #ccc;
-}
-
-.sudoku td:nth-child(3n) {
-    border-right: 2px solid #ccc;
+    line-height: 20vh;
 }
