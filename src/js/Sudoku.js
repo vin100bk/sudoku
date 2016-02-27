@@ -4,6 +4,8 @@
  * @author Vincent.B
  */
 var Sudoku = (function ($) {
+    var self;
+
     /**
      * Configuration information
      */
@@ -38,6 +40,8 @@ var Sudoku = (function ($) {
 
         // Init values
         _initValues();
+
+        self = this;
     }
 
     /*******
@@ -73,7 +77,7 @@ var Sudoku = (function ($) {
         var tmpSubset = {};
         for (var i = 0; i < subset.length; i++) {
             // Is it a digit ?
-            if (!subset[i].toString().match(/^[1-9]$/)) {
+            if (subset[i] && !subset[i].toString().match(/^[1-9]$/)) {
                 return false;
             }
 
@@ -107,32 +111,51 @@ var Sudoku = (function ($) {
                 values[obj.data('row')] = {};
             }
 
-            // Store the value
-            values[obj.data('row')][obj.data('col')] = obj.val();
+            if (obj.val().length == 1) {
+                // Store the value
+                values[obj.data('row')][obj.data('col')] = obj.val();
+            } else {
+                // Delete the value
+                delete values[obj.data('row')][obj.data('col')];
+            }
 
             // Notify the change
             $('#' + config.id).trigger('update');
         });
 
         $('#' + config.id).on('update', function () {
-            // Create the object
-            var sudokuValues = {};
-            sudokuValues[reference] = values;
-
             // Store it
-            firebase.set(sudokuValues);
+            firebase.child(reference).set(values);
+
+            // Check the status of the sudoku
+            _checkStatus();
         });
+    };
+
+    /**
+     * Check the status of the sudoku
+     * Display a notice if the user lose or win
+     * @private
+     */
+    var _checkStatus = function() {
+        if (!self.isValid()) {
+            _lost();
+        }
+        else if (self.isFinished() && self.isValid()) {
+            _won();
+        }
     };
 
     /**
      * Init values from Firebase and attach an event for real time reading
      * @private
      */
-    var _initValues = function() {
+    var _initValues = function () {
         // Read in Firebase and attach handler for each modification
-        firebase.child(reference).on('value', function(snapshot) {
-            values = snapshot.val();
+        firebase.child(reference).on('value', function (snapshot) {
+            values = snapshot.val() || {};
             _populateTable();
+            _checkStatus();
         });
     };
 
@@ -140,12 +163,45 @@ var Sudoku = (function ($) {
      * Populate the sudoku table
      * @private
      */
-    var _populateTable = function() {
-        for(var r in values) {
-            for(var c in values[r]) {
+    var _populateTable = function () {
+        for (var r in values) {
+            for (var c in values[r]) {
                 $('#' + config.id + ' input[data-row="' + r + '"][data-col="' + c + '"]').val(values[r][c]);
             }
         }
+    };
+
+    /**
+     * Remove all popups
+     * @private
+     */
+    var _removePopup = function () {
+        $('.popup').remove();
+        $('.popup-wrapper').remove();
+    };
+
+    /**
+     * Called when you lose
+     * @private
+     */
+    var _lost = function () {
+        _removePopup();
+        $('body').append('<div class="popup-wrapper"></div><div class="popup popup-lost"><p>You lost, the last action made the sudoku invalid !</p><p class="popup-buttons"><a href="#" id="continueSudoku">Continue this sudoku</a> - <a href="">Start another Sudoku</a></p></div>');
+
+        // Undo the last action
+        $('#continueSudoku').on('click', function (e) {
+            e.preventDefault();
+            _removePopup();
+        });
+    };
+
+    /**
+     * Called when you win
+     * @private
+     */
+    var _won = function () {
+        _removePopup();
+        $('body').append('<div class="popup-wrapper"></div><div class="popup popup-won"><p>Congratulations ! You succeed !</p><p class="popup-buttons"><a href="">Start another Sudoku</a></p></div>');
     };
 
     /*******
@@ -192,12 +248,12 @@ var Sudoku = (function ($) {
 
                 // Square
                 if (i in values && j in values[i]) {
-                    var key = i % 3 + '|' + j % 3;
-                    if (!key in squares) {
+                    var key = Math.floor(i / 3) + '|' + Math.floor(j / 3);
+                    if (! (key in squares)) {
                         squares[key] = [];
                     }
 
-                    squares[key] = values[i][j];
+                    squares[key].push(values[i][j]);
                 }
             }
 
@@ -212,6 +268,24 @@ var Sudoku = (function ($) {
                 return false;
             }
         }
+        return true;
+    };
+
+    /**
+     * Is the sudoku finished?
+     * @returns {boolean}
+     */
+    Sudoku.prototype.isFinished = function () {
+        if (Object.keys(values).length != 9) {
+            return false;
+        }
+
+        for (var c in values) {
+            if (Object.keys(values[c]).length != 9) {
+                return false
+            }
+        }
+
         return true;
     };
 
