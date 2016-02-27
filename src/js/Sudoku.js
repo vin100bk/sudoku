@@ -78,11 +78,13 @@ var Sudoku = (function ($) {
         for (var i = 0; i < subset.length; i++) {
             // Is it a digit ?
             if (subset[i] && !subset[i].toString().match(/^[1-9]$/)) {
+                console.log('Invalid digit ' + subset[i]);
                 return false;
             }
 
             if (subset[i] in tmpSubset) {
                 // The value already exist in the subset
+                console.log('Duplicates in the subset ' + subset);
                 return false;
 
             } else {
@@ -236,7 +238,9 @@ var Sudoku = (function ($) {
         for (var i = 0; i < 9; i++) {
             // Row
             if (i in values) {
-                rows.push(values[i]);
+                rows.push(Object.keys(values[i]).map(function (key) {
+                    return values[i][key]
+                }));
             }
 
             var col = [];
@@ -263,6 +267,7 @@ var Sudoku = (function ($) {
         var subsets = rows.concat(cols, Object.keys(squares).map(function (key) {
             return squares[key]
         }));
+
         for (var i = 0; i < subsets.length; i++) {
             if (!_isSubsetValid(subsets[i])) {
                 return false;
