@@ -34,6 +34,9 @@ var Sudoku = (function ($) {
     function Sudoku(ref, c) {
         reference = ref;
         config = $.extend({}, config, c || {});
+
+        // Init values
+        _initValues();
     }
 
     /*******
@@ -118,6 +121,30 @@ var Sudoku = (function ($) {
             // Store it
             firebase.set(sudokuValues);
         });
+    };
+
+    /**
+     * Init values from Firebase and attach an event for real time reading
+     * @private
+     */
+    var _initValues = function() {
+        // Read in Firebase and attach handler for each modification
+        firebase.child(reference).on('value', function(snapshot) {
+            values = snapshot.val();
+            _populateTable();
+        });
+    };
+
+    /**
+     * Populate the sudoku table
+     * @private
+     */
+    var _populateTable = function() {
+        for(var r in values) {
+            for(var c in values[r]) {
+                $('#' + config.id + ' input[data-row="' + r + '"][data-col="' + c + '"]').val(values[r][c]);
+            }
+        }
     };
 
     /*******
