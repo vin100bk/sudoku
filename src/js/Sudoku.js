@@ -17,9 +17,22 @@ var Sudoku = (function ($) {
     var values = {};
 
     /**
-     * @constructor
+     * Firebase instance
      */
-    function Sudoku(c) {
+    var firebase = new Firebase('https://sudokucol.firebaseio.com/');
+
+    /**
+     * Sudoku reference
+     */
+    var reference;
+
+    /**
+     * @constructor
+     * @param ref: the sudoku reference
+     * @param c: configuration
+     */
+    function Sudoku(ref, c) {
+        reference = ref;
         config = $.extend({}, config, c || {});
     }
 
@@ -37,7 +50,7 @@ var Sudoku = (function ($) {
         for (var i = 0; i < 9; i++) {
             content += '<tr>';
             for (var j = 0; j < 9; j++) {
-                content += '<td><input type="text" name="sudoku[' + i + '][' + j + ']" /></td>';
+                content += '<td><input type="text" name="sudoku" data-row="' + i + '" data-col="' + j + '" /></td>';
             }
             content += '</tr>';
         }
@@ -76,15 +89,34 @@ var Sudoku = (function ($) {
      * Initialize listerners on the table
      * @private
      */
-    var _initListeners = function() {
-        $('#' + config.id + ' input').on('keydown', function(e) {
+    var _initListeners = function () {
+        $('#' + config.id + ' input').on('keydown', function (e) {
             // Accept only 1-9 (1 character) and deletion keys
-            if((e.which == 8 || e.which == 46) || (e.which >= 49 && e.which <= 57 && $(this).val().length == 0)) {
-                $('#' + config.id).trigger('change');
-                return true;
-            } else {
-                return false;
+            return (e.which == 8 || e.which == 46) || (e.which >= 49 && e.which <= 57 && $(this).val().length == 0);
+        });
+
+        $('#' + config.id + ' input').on('keyup', function (e) {
+            var obj = $(this);
+            // Accept only 1-9 (1 character) and deletion keys
+            // Store the value
+            if (!(obj.data('row') in values)) {
+                values[obj.data('row')] = {};
             }
+
+            // Store the value
+            values[obj.data('row')][obj.data('col')] = obj.val();
+
+            // Notify the change
+            $('#' + config.id).trigger('update');
+        });
+
+        $('#' + config.id).on('update', function () {
+            // Create the object
+            var sudokuValues = {};
+            sudokuValues[reference] = values;
+
+            // Store it
+            firebase.set(sudokuValues);
         });
     };
 
@@ -144,7 +176,9 @@ var Sudoku = (function ($) {
             cols.push(col);
         }
 
-        var subsets = rows.concat(cols, Object.keys(squares).map(function(key){return squares[key]}));
+        var subsets = rows.concat(cols, Object.keys(squares).map(function (key) {
+            return squares[key]
+        }));
         for (var i = 0; i < subsets.length; i++) {
             if (!_isSubsetValid(subsets[i])) {
                 return false;
