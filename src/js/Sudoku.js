@@ -4,9 +4,27 @@
  * @author Vincent.B
  */
 var Sudoku = (function ($) {
-    function Sudoku() {
+    /**
+     * Configuration information
+     */
+    var config = {
+    };
 
+    /**
+     * Contains sudoku values
+     */
+    var values = {};
+
+    /**
+     * @constructor
+     */
+    function Sudoku(c) {
+        config = $.extend({}, config, c || {});
     }
+
+    /*******
+     * Private methods
+     *******/
 
     /**
      * Get sudoku HTML
@@ -25,9 +43,9 @@ var Sudoku = (function ($) {
         return $('<table>' + content + '</table>');
     };
 
-    /*
+    /*******
      * Public methods
-     */
+     *******/
 
     /**
      * Render the sudoku
@@ -39,7 +57,7 @@ var Sudoku = (function ($) {
         }
 
         wrapper.html(getSudokuHtml());
-    }
+    };
 
     return Sudoku;
 })($);
