@@ -8,7 +8,8 @@ var Sudoku = (function ($) {
      * Configuration information
      */
     var config = {
-        'id': 'sudoku'
+        'id': 'sudoku',
+        'class': 'sudoku'
     };
 
     /**
@@ -58,7 +59,7 @@ var Sudoku = (function ($) {
             content += '</tr>';
         }
 
-        return $('<table id="' + config.id + '">' + content + '</table>');
+        return $('<table class="' + config.class + '" id="' + config.id + '">' + content + '</table>');
     };
 
     /**
